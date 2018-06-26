@@ -1,0 +1,43 @@
+body {
+    text-align: center;
+}
+
+p {
+    margin: 2px;
+    text-align: left;
+    font-size: 13px;
+}
+
+h4 {
+    margin: 10px;
+}
+
+.content {
+    display: flex;
+    justify-content: space-evenly;
+}
+
+#player-buttons {
+    width: 10%;
+    border: 1px solid black;
+}
+
+#game-area {
+    width: 50%;
+    border: 1px solid black;
+}
+
+#chat {
+    border: 1px solid black;
+    width: 30%;
+    padding: 5px;
+}
+
+.chat-window {
+    height: 300px;
+    border: 1px solid black;
+    margin: 5px;
+    padding: 5px;
+    overflow: auto;
+}
+
