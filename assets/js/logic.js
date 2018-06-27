@@ -19,7 +19,9 @@ firebase.auth().onAuthStateChanged(firebaseUser => {
 var username = prompt("What shall be your username?");
 var userList = [];
 $($("<h3>").text("Hello " + username)).insertAfter($("h1"));
-
+// database.ref("/chat").set({
+//     chat: [""]
+// });
 
 var generateButtons = function() {
     $("#buttons").empty();
@@ -28,6 +30,23 @@ var generateButtons = function() {
         var newButton = $("<button>").attr("data-competitor",user).addClass("competitor").text(user);
         $("#buttons").append(newButton);
     });
+}
+
+var updateChat = function(itemToAdd) {
+    if(itemToAdd==="clear") {
+        database.ref("/chat").set({  });
+        $(".chat-window").empty();
+    }
+    else if(itemToAdd==="reset") {
+        resetLeaderboard();
+    }
+    else if(itemToAdd) {
+        database.ref("/chat").push("<strong>" + username + "</strong>" + ": " + itemToAdd);
+    }
+}
+
+var resetLeaderboard = function() {
+
 }
 
 database.ref(".info/connected").on("value", function (data) {
@@ -49,19 +68,24 @@ database.ref("/connections").on("value", function (data) {
     generateButtons();
 });
 
+database.ref("/chat").on("value", function (data) {
+    try { var keys = Object.keys(data.val()); }
+    catch {
+        $(".chat-window").empty();
+        return;
+    }
+    $(".chat-window").empty();
+    keys.forEach(element => {
+        $(".chat-window").append($("<p>").html(data.val()[element]));
+    });
+});
+
+
 $("#post-chat").on("click", function (event) {
     event.preventDefault();
     var newPost = $("#chat-textbox").val().trim();
-    if (newPost === "clear") {
-        currentChat = [""];
-    }
-    else if (newPost) {
-        currentChat.push("<strong>" + username + "</strong>" + ": " + newPost);
-    }
+    updateChat(newPost);
     $("#chat-textbox").val("");
-    database.ref("/main").set({
-        chat: currentChat
-    })
 })
 
 
