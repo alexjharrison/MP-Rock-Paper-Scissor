@@ -19,6 +19,26 @@ button {
     text-transform: capitalize;
 }
 
+.capitalize {
+    text-transform: capitalize;
+}
+
+.outline {
+    border: 1px solid black;
+    background-color: lightblue;
+    font-size: 40px;
+    padding: 20px;
+    align-content: center;
+}
+
+.number {
+    border: 1px solid black;
+    background-color: lightblue;
+    font-size: 40px;
+    padding: 20px;
+    align-content: center;
+}
+
 .content {
     display: flex;
     justify-content: space-evenly;
@@ -32,6 +52,11 @@ button {
 #game-area {
     width: 50%;
     border: 1px solid black;
+}
+
+#battle-area {
+    display: flex;
+    justify-content: space-evenly;
 }
 
 #chat {
@@ -48,9 +73,14 @@ button {
     overflow: auto;
 }
 
-.leaderboard {
+.leaderboard{
     border: 1px solid black;
     margin: 20px auto;
     width: 200px;
+}
+
+.lead {
+    text-align: left;
+    text-transform: capitalize;
 }
 
