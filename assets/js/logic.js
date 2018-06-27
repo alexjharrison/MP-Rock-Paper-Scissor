@@ -13,12 +13,22 @@ var database = firebase.database();
 firebase.auth().signInAnonymously();
 
 firebase.auth().onAuthStateChanged(firebaseUser => {
-    console.log(firebaseUser);
+    console.log(firebaseUser.uid);
 });
 
 var username = prompt("What shall be your username?");
 var userList = [];
 $($("<h3>").text("Hello " + username)).insertAfter($("h1"));
+
+
+var generateButtons = function() {
+    $("#buttons").empty();
+    userList.forEach(user => {
+        if(user !== username)
+        var newButton = $("<button>").attr("data-competitor",user).addClass("competitor").text(user);
+        $("#buttons").append(newButton);
+    });
+}
 
 database.ref(".info/connected").on("value", function (data) {
     if (data.val()) {
@@ -29,7 +39,14 @@ database.ref(".info/connected").on("value", function (data) {
 
 database.ref("/connections").on("value", function (data) {
     var keys = Object.keys(data.val());
-    console.log(keys);
+    userList = [];
+    keys.forEach(element => {
+        console.log("element",element)
+        console.log("data.val",data.val())
+        userList.push(data.val()[element]);
+    });
+    console.log("userlist",userList);
+    generateButtons();
 });
 
 $("#post-chat").on("click", function (event) {

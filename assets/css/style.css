@@ -12,6 +12,13 @@ h4 {
     margin: 10px;
 }
 
+button {
+    border-radius: 5px;
+    display: block;
+    margin: 5px auto;
+    text-transform: capitalize;
+}
+
 .content {
     display: flex;
     justify-content: space-evenly;
