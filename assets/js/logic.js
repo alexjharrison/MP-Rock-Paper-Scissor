@@ -8,16 +8,29 @@ var config = {
     messagingSenderId: "332390958320"
 };
 firebase.initializeApp(config);
-
 var database = firebase.database();
-var currentChat = [];
-var userList = [];
+
+firebase.auth().signInAnonymously();
+
+firebase.auth().onAuthStateChanged(firebaseUser => {
+    console.log(firebaseUser);
+});
+
 var username = prompt("What shall be your username?");
+var userList = [];
 $($("<h3>").text("Hello " + username)).insertAfter($("h1"));
 
-database.ref("/main").set({ chat: ["oi"]});
+database.ref(".info/connected").on("value", function (data) {
+    if (data.val()) {
+        var con = database.ref("/connections").push(username);
+        con.onDisconnect().remove();
+    }
+});
 
-
+database.ref("/connections").on("value", function (data) {
+    var keys = Object.keys(data.val());
+    console.log(keys);
+});
 
 $("#post-chat").on("click", function (event) {
     event.preventDefault();
@@ -33,34 +46,6 @@ $("#post-chat").on("click", function (event) {
         chat: currentChat
     })
 })
-
-database.ref("/main/chat").on("value", function (data) {
-    currentChat = data.val();
-    console.log(currentChat)
-    if (currentChat) {
-        $(".chat-window").empty();
-        currentChat.forEach(element => {
-            $(".chat-window").prepend($("<p>").html(element));
-        });
-    }
-});
-
-database.ref("/main/userlist").on("value", function (data) {
-    userList = data.val();
-    // if (userList) {
-    //     if (!userList.includes(username)) {
-    //         userList.push(username);
-    //         console.log(username)
-    //     }
-    // }
-    // else {
-    //     database.ref("/main").set({
-    //         userList: [username]
-    //     });
-    // }
-    
-
-});
 
 
 
