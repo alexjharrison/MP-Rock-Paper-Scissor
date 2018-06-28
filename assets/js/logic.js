@@ -13,7 +13,7 @@ var database = firebase.database();
 firebase.auth().signInAnonymously();
 
 firebase.auth().onAuthStateChanged(firebaseUser => {
-    console.log(firebaseUser.uid);
+
 });
 
 var username;
@@ -23,6 +23,7 @@ while (!username) {
 
 var competitor = "";
 var ready = false;
+var timeOut;
 var interval;
 var wins = 0;
 var losses = 0;
@@ -73,45 +74,45 @@ var startFight = function () {
         if (count > 0) {
             $("#battle-area").html($("<p>").addClass("number").text(count));
         }
-        else if (count > -3) {
-            $("#battle-area").html($("<p>").addClass("outline").text("Rock").attr("data-pick","rock")).append($("<p>").addClass("outline").text("Paper").attr("data-pick","paper")).append($("<p>").addClass("outline").text("Scissors").attr("data-pick","scissors"));
-            ready = false;
-        }
-        else if (count > -5) {
+        else {
             clearInterval(interval);
-            $("#battle-area").html($("<p>").addClass("outline").text("You timed out and lost"));
-            database.ref(`/players/${username}/losses`).set(++losses);
+            $("#battle-area").html($("<p>").addClass("outline").text("Rock").attr("data-pick", "rock")).append($("<p>").addClass("outline").text("Paper").attr("data-pick", "paper")).append($("<p>").addClass("outline").text("Scissors").attr("data-pick", "scissors"));
+            ready = false;
         }
     }, 1000);
 
-
-    competitor = "";
-    database.ref(`/players/${username}/competitor`).set("");
-    database.ref(`/players/${username}/choice`).set("");
-    theirChoice = "";
-    myChoice = "";
-    displayStats();
+    timeOut = setTimeout(function () {
+        $("#battle-area").html($("<p>").addClass("outline").text("You timed out and lost"));
+        database.ref(`/players/${username}/losses`).set(++losses);
+        competitor = "";
+        database.ref(`/players/${username}/competitor`).set("");
+        database.ref(`/players/${username}/choice`).set("");
+        theirChoice = "";
+        myChoice = "";
+        displayStats();
+    }, 8000);
 }
 
-var displayStats = function() {
+var displayStats = function () {
     //TODO show games wins losses and leaderboard
 };
 
-var findWinner = function() { 
-    alert("am i here")
-    if((myChoice==="rock"&&theirChoice==="scissors")||(myChoice==="scissors"&&theirChoice==="paper")||(myChoice==="paper"&&theirChoice==="rock")) {
+var findWinner = function () {
+    console.log("mychoice",myChoice);
+    console.log("theirchoice",theirChoice);
+    if ((myChoice === "rock" && theirChoice === "scissors") || (myChoice === "scissors" && theirChoice === "paper") || (myChoice === "paper" && theirChoice === "rock")) {
         //i win
         database.ref(`/players/${username}/wins`).set(++wins);
-        $("#battle-area").html($("<p>").addClass("number").text("You picked "+myChoice)).append($("<p>").addClass("number").text("You picked "+myChoice)).append($("<p>").addClass("number").text("They picked "+theirChoice)).append($("<p>").addClass("number").text("You Win!"))
+        $("#battle-area").html($("<p>").addClass("number").text("You picked " + myChoice)).append($("<p>").addClass("number").text("You picked " + myChoice)).append($("<p>").addClass("number").text("They picked " + theirChoice)).append($("<p>").addClass("number").text("You Win!"))
     }
-    else if((theirChoice==="rock"&&myChoice==="scissors")||(theirChoice==="scissors"&&myChoice==="paper")||(theirChoice==="paper"&&myChoice==="rock")) {
+    else if ((theirChoice === "rock" && myChoice === "scissors") || (theirChoice === "scissors" && myChoice === "paper") || (theirChoice === "paper" && myChoice === "rock")) {
         //i lose
         database.ref(`/players/${username}/losses`).set(++losses);
     }
-    setTimeout(writeStats(),3000);
+    setTimeout(writeStats(), 3000);
 }
 
-var writeStats = function() {
+var writeStats = function () {
     alert("jebus bless");
 }
 
@@ -127,11 +128,8 @@ database.ref("/connections").on("value", function (data) {
     var keys = Object.keys(data.val());
     userList = [];
     keys.forEach(element => {
-        console.log("element", element)
-        console.log("data.val", data.val())
         userList.push(data.val()[element]);
     });
-    console.log("userlist", userList);
     generateButtons();
 });
 
@@ -148,8 +146,13 @@ database.ref("/chat").on("value", function (data) {
 });
 
 database.ref("/players/" + username + "/competitor").on("value", function (data) {
+    if(!data.val()) {
+        return;
+    }
+
     //i'm challenged
     if (data.val() && !ready) {
+        competitor = data.val();
         confirm(data.val() + " wants to fight you");
         database.ref(`players/${data.val()}/competitor`).set(username);
         ready = true;
@@ -161,20 +164,18 @@ database.ref("/players/" + username + "/competitor").on("value", function (data)
     }
 })
 
-database.ref(`/players/${username}/choice`).on("value",function (data) {
+database.ref(`/players/${username}/choice`).on("value", function (data) {
+    console.log("competitor",competitor)
     myChoice = data.val();
-    console.log("mychocie",myChoice);
-    console.log("theirchoice",theirChoice);
-    console.log(data.val());
-    if(theirChoice) {
+    console.log("mychoice", myChoice);
+    if (theirChoice) {
         findWinner();
     }
 });
-database.ref(`/players/${competitor}/choice`).on("value",function (data) {
+database.ref(`/players/${competitor}/choice`).on("value", function (data) {
     theirChoice = data.val();
-    console.log("chocie",myChoice);
-    console.log("eirchoice",theirChoice);
-    if(myChoice) {
+    console.log("theirchoice", theirChoice);
+    if (myChoice) {
         findWinner();
     }
 });
@@ -188,13 +189,15 @@ $("#post-chat").on("click", function (event) {
 
 $(document).on("click", ".competitor", function () {
     ready = true;
-    competitor = $(this).attr("data-competitor")
+    competitor = $(this).attr("data-competitor");
     database.ref(`players/${competitor}/competitor`).set(username);
 });
 
 $(document).on("click", ".outline", function () {
-    clearInterval(interval);
+    clearTimeout(timeOut);
     ready = false;
+    console.log(`/players/${username}/choice`);
+    console.log($(this).attr("data-pick"));
     database.ref(`/players/${username}/choice`).set($(this).attr("data-pick"));
 });
 
