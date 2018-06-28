@@ -76,11 +76,9 @@ var startFight = function () {
         }
         else {
             clearInterval(interval);
-            console.log("competitoratfightstart", competitor);
             $("#battle-area").html($("<p>").addClass("outline").text("Rock").attr("data-pick", "rock")).append($("<p>").addClass("outline").text("Paper").attr("data-pick", "paper")).append($("<p>").addClass("outline").text("Scissors").attr("data-pick", "scissors"));
             database.ref(`/players/${competitor}/choice`).on("value", function (data) {
                 theirChoice = data.val();
-                console.log("theirchoice", theirChoice);
                 if (myChoice) {
                     findWinner();
                 }
@@ -89,33 +87,35 @@ var startFight = function () {
     }, 1000);
 
     timeOut = setTimeout(function () {
-        $("#battle-area").html($("<p>").addClass("outline").text("You timed out and lost"));
-        database.ref(`/players/${username}/losses`).set(++losses);
-        competitor = "";
-        database.ref(`/players/${username}/competitor`).set("");
-        database.ref(`/players/${username}/choice`).set("");
-        theirChoice = "";
-        myChoice = "";
-        writeStats();
+        myChoice = "timed out";
+        database.ref(`/players/${username}/choice`).set("timed out");
     }, 8000);
 }
 
 var findWinner = function () {
-    console.log("mychoiceinfindwinner", myChoice);
-    console.log("theirchoiceinfindwinner", theirChoice);
     if ((myChoice === "rock" && theirChoice === "scissors") || (myChoice === "scissors" && theirChoice === "paper") || (myChoice === "paper" && theirChoice === "rock")) {
         //i win
         database.ref(`/players/${username}/wins`).set(++wins);
-        $("#battle-area").html($("<p>").addClass("number").text("You picked " + myChoice)).append($("<p>").addClass("number").text("They picked " + theirChoice)).append($("<p>").addClass("number").text("You Win!"))
+        $("#battle-area").html($("<p>").addClass("number").text(myChoice + " beats " + theirChoice)).append($("<p>").addClass("number").text("You Win!"));
     }
     else if ((theirChoice === "rock" && myChoice === "scissors") || (theirChoice === "scissors" && myChoice === "paper") || (theirChoice === "paper" && myChoice === "rock")) {
         //i lose
         database.ref(`/players/${username}/losses`).set(++losses);
-        $("#battle-area").html($("<p>").addClass("number").text("You picked " + myChoice)).append($("<p>").addClass("number").text("They picked " + theirChoice)).append($("<p>").addClass("number").text("You Win!"))
+        $("#battle-area").html($("<p>").addClass("number").text(theirChoice + " beats " + myChoice)).append($("<p>").addClass("number").text("You Lose!"));
     }
-    else if (myChoice === theirChoice) {
+    else if (myChoice === "timed out") {
+        //i time out
+        database.ref(`/players/${username}/losses`).set(++losses);
+        $("#battle-area").html($("<p>").addClass("number").text("You timed out")).append($("<p>").addClass("number").text("You Lose!"));
+    }
+    else if (myChoice === theirChoice && myChoice !=="timed out") {
         //tie
-        $("#battle-area").html($("<p>").addClass("number").text("You both picked " + myChoice)).append($("<p>").addClass("number").text("It's a tie!"))
+        $("#battle-area").html($("<p>").addClass("number").text("You both picked " + myChoice)).append($("<p>").addClass("number").text("It's a tie!"));
+    }
+    else if (theirChoice==="timed out") {
+        //opponent timed out
+        database.ref(`/players/${username}/wins`).set(++wins);
+        $("#battle-area").html($("<p>").addClass("number").text("Opponent timed out")).append($("<p>").addClass("number").text("You Win!"));
     }
     database.ref(`players/${competitor}/competitor`).off();
     competitor = "";
@@ -123,12 +123,14 @@ var findWinner = function () {
     database.ref(`/players/${username}/choice`).set("");
     theirChoice = "";
     myChoice = "";
+    ready = false;
     setTimeout(writeStats, 3000);
 }
 
 var writeStats = function () {
-    $("#battle-area").html("");
-    //TODO show games wins losses and leaderboard
+    $("#battle-area").html($("<div>").text("Games: "+(wins+losses)).append($("<div>").text("Wins: "+wins)).append($("<div>").text("Losses: "+losses)));
+    //show games wins losses and leaderboard
+
 }
 
 database.ref(".info/connected").on("value", function (data) {
@@ -180,9 +182,8 @@ database.ref("/players/" + username + "/competitor").on("value", function (data)
 })
 
 database.ref(`/players/${username}/choice`).on("value", function (data) {
-    console.log("competitor", competitor)
     myChoice = data.val();
-    console.log("mychoice", myChoice);
+    console.log(myChoice);
     if (theirChoice) {
         findWinner();
     }
@@ -213,11 +214,11 @@ $(document).on("click", ".competitor", function () {
 $(document).on("click", ".outline", function () {
     clearTimeout(timeOut);
     ready = false;
-    // console.log(`/players/${username}/choice`);
-    // console.log($(this).attr("data-pick"));
     database.ref(`/players/${username}/choice`).set($(this).attr("data-pick"));
 });
 
+
+writeStats();
 
 
 
