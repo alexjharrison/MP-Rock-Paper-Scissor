@@ -31,10 +31,10 @@ var theirChoice = "";
 var myChoice = "";
 
 database.ref("/players/" + username).set({
-    wins: 0,
-    losses: 0,
-    competitor: "",
-    choice: ""
+    "wins": 0,
+    "losses": 0,
+    "competitor": "",
+    "choice": ""
 });
 
 
@@ -76,8 +76,15 @@ var startFight = function () {
         }
         else {
             clearInterval(interval);
+            console.log("competitoratfightstart", competitor);
             $("#battle-area").html($("<p>").addClass("outline").text("Rock").attr("data-pick", "rock")).append($("<p>").addClass("outline").text("Paper").attr("data-pick", "paper")).append($("<p>").addClass("outline").text("Scissors").attr("data-pick", "scissors"));
-            ready = false;
+            database.ref(`/players/${competitor}/choice`).on("value", function (data) {
+                theirChoice = data.val();
+                console.log("theirchoice", theirChoice);
+                if (myChoice) {
+                    findWinner();
+                }
+            });
         }
     }, 1000);
 
@@ -89,31 +96,39 @@ var startFight = function () {
         database.ref(`/players/${username}/choice`).set("");
         theirChoice = "";
         myChoice = "";
-        displayStats();
+        writeStats();
     }, 8000);
 }
 
-var displayStats = function () {
-    //TODO show games wins losses and leaderboard
-};
-
 var findWinner = function () {
-    console.log("mychoice",myChoice);
-    console.log("theirchoice",theirChoice);
+    console.log("mychoiceinfindwinner", myChoice);
+    console.log("theirchoiceinfindwinner", theirChoice);
     if ((myChoice === "rock" && theirChoice === "scissors") || (myChoice === "scissors" && theirChoice === "paper") || (myChoice === "paper" && theirChoice === "rock")) {
         //i win
         database.ref(`/players/${username}/wins`).set(++wins);
-        $("#battle-area").html($("<p>").addClass("number").text("You picked " + myChoice)).append($("<p>").addClass("number").text("You picked " + myChoice)).append($("<p>").addClass("number").text("They picked " + theirChoice)).append($("<p>").addClass("number").text("You Win!"))
+        $("#battle-area").html($("<p>").addClass("number").text("You picked " + myChoice)).append($("<p>").addClass("number").text("They picked " + theirChoice)).append($("<p>").addClass("number").text("You Win!"))
     }
     else if ((theirChoice === "rock" && myChoice === "scissors") || (theirChoice === "scissors" && myChoice === "paper") || (theirChoice === "paper" && myChoice === "rock")) {
         //i lose
         database.ref(`/players/${username}/losses`).set(++losses);
+        $("#battle-area").html($("<p>").addClass("number").text("You picked " + myChoice)).append($("<p>").addClass("number").text("They picked " + theirChoice)).append($("<p>").addClass("number").text("You Win!"))
     }
-    setTimeout(writeStats(), 3000);
+    else if (myChoice === theirChoice) {
+        //tie
+        $("#battle-area").html($("<p>").addClass("number").text("You both picked " + myChoice)).append($("<p>").addClass("number").text("It's a tie!"))
+    }
+    database.ref(`players/${competitor}/competitor`).off();
+    competitor = "";
+    database.ref(`/players/${username}/competitor`).set("");
+    database.ref(`/players/${username}/choice`).set("");
+    theirChoice = "";
+    myChoice = "";
+    setTimeout(writeStats, 3000);
 }
 
 var writeStats = function () {
-    alert("jebus bless");
+    $("#battle-area").html("");
+    //TODO show games wins losses and leaderboard
 }
 
 database.ref(".info/connected").on("value", function (data) {
@@ -146,7 +161,7 @@ database.ref("/chat").on("value", function (data) {
 });
 
 database.ref("/players/" + username + "/competitor").on("value", function (data) {
-    if(!data.val()) {
+    if (!data.val()) {
         return;
     }
 
@@ -165,20 +180,22 @@ database.ref("/players/" + username + "/competitor").on("value", function (data)
 })
 
 database.ref(`/players/${username}/choice`).on("value", function (data) {
-    console.log("competitor",competitor)
+    console.log("competitor", competitor)
     myChoice = data.val();
     console.log("mychoice", myChoice);
     if (theirChoice) {
         findWinner();
     }
 });
-database.ref(`/players/${competitor}/choice`).on("value", function (data) {
-    theirChoice = data.val();
-    console.log("theirchoice", theirChoice);
-    if (myChoice) {
-        findWinner();
-    }
-});
+
+/////////////////////////////////////////////////////////////////////////////
+// database.ref(`/players/${competitor}/choice`).on("value", function (data) {
+//     theirChoice = data.val();
+//     if (myChoice) {
+//         findWinner();
+//     }
+// });
+////////////////////////////////////////////////////////////////////////////////
 
 $("#post-chat").on("click", function (event) {
     event.preventDefault();
@@ -196,8 +213,8 @@ $(document).on("click", ".competitor", function () {
 $(document).on("click", ".outline", function () {
     clearTimeout(timeOut);
     ready = false;
-    console.log(`/players/${username}/choice`);
-    console.log($(this).attr("data-pick"));
+    // console.log(`/players/${username}/choice`);
+    // console.log($(this).attr("data-pick"));
     database.ref(`/players/${username}/choice`).set($(this).attr("data-pick"));
 });
 
