@@ -108,11 +108,11 @@ var findWinner = function () {
         database.ref(`/players/${username}/losses`).set(++losses);
         $("#battle-area").html($("<p>").addClass("number").text("You timed out")).append($("<p>").addClass("number").text("You Lose!"));
     }
-    else if (myChoice === theirChoice && myChoice !=="timed out") {
+    else if (myChoice === theirChoice && myChoice !== "timed out") {
         //tie
         $("#battle-area").html($("<p>").addClass("number").text("You both picked " + myChoice)).append($("<p>").addClass("number").text("It's a tie!"));
     }
-    else if (theirChoice==="timed out") {
+    else if (theirChoice === "timed out") {
         //opponent timed out
         database.ref(`/players/${username}/wins`).set(++wins);
         $("#battle-area").html($("<p>").addClass("number").text("Opponent timed out")).append($("<p>").addClass("number").text("You Win!"));
@@ -128,7 +128,7 @@ var findWinner = function () {
 }
 
 var writeStats = function () {
-    $("#battle-area").html($("<div>").text("Games: "+(wins+losses)).append($("<div>").text("Wins: "+wins)).append($("<div>").text("Losses: "+losses)));
+    $("#battle-area").html($("<div>").text("Games: " + (wins + losses)).append($("<div>").text("Wins: " + wins)).append($("<div>").text("Losses: " + losses)));
     //show games wins losses and leaderboard
 
 }
@@ -158,11 +158,12 @@ database.ref("/chat").on("value", function (data) {
     }
     $(".chat-window").empty();
     keys.forEach(element => {
-        $(".chat-window").append($("<p>").html(data.val()[element]));
+        $(".chat-window").prepend($("<p>").html(data.val()[element]));
     });
 });
 
 database.ref("/players/" + username + "/competitor").on("value", function (data) {
+
     if (!data.val()) {
         return;
     }
@@ -189,14 +190,12 @@ database.ref(`/players/${username}/choice`).on("value", function (data) {
     }
 });
 
-/////////////////////////////////////////////////////////////////////////////
-// database.ref(`/players/${competitor}/choice`).on("value", function (data) {
-//     theirChoice = data.val();
-//     if (myChoice) {
-//         findWinner();
-//     }
-// });
-////////////////////////////////////////////////////////////////////////////////
+database.ref(`/players/${competitor}/choice`).on("value", function (data) {
+    theirChoice = data.val();
+    if (myChoice) {
+        findWinner();
+    }
+});
 
 $("#post-chat").on("click", function (event) {
     event.preventDefault();
@@ -206,14 +205,22 @@ $("#post-chat").on("click", function (event) {
 })
 
 $(document).on("click", ".competitor", function () {
-    ready = true;
     competitor = $(this).attr("data-competitor");
-    database.ref(`players/${competitor}/competitor`).set(username);
+    database.ref("/players/" + $(this).attr("data-competitor")).once("value", function (data) {
+        if (data.val().choice === "" && data.val().competitor === "") {
+            ready = true;
+            // competitor = $(this).attr("data-competitor");
+            database.ref(`players/${competitor}/competitor`).set(username);
+        }
+        else {
+            alert(competitor + " is in a match, try again later");
+            competitor = "";
+        }
+    });
 });
 
 $(document).on("click", ".outline", function () {
     clearTimeout(timeOut);
-    ready = false;
     database.ref(`/players/${username}/choice`).set($(this).attr("data-pick"));
 });
 

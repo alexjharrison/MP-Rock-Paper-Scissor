@@ -71,6 +71,8 @@ button {
     margin: 5px;
     padding: 5px;
     overflow: auto;
+    display: flex;
+    flex-direction: column-reverse;
 }
 
 .leaderboard{
