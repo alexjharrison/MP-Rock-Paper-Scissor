@@ -75,14 +75,4 @@ button {
     flex-direction: column-reverse;
 }
 
-.leaderboard{
-    border: 1px solid black;
-    margin: 20px auto;
-    width: 200px;
-}
-
-.lead {
-    text-align: left;
-    text-transform: capitalize;
-}
 
