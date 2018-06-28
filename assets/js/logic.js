@@ -129,7 +129,7 @@ var findWinner = function () {
 
 var writeStats = function () {
     $("#battle-area").html($("<div>").text("Wins: " + wins)).append($("<div>").text("Losses: " + losses));
-    //show games wins losses and leaderboard
+    
 
 }
 
