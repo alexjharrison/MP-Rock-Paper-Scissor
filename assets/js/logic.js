@@ -129,7 +129,7 @@ var findWinner = function () {
 
 var writeStats = function () {
     $("#battle-area").html($("<div>").text("Wins: " + wins)).append($("<div>").text("Losses: " + losses));
-    
+
 
 }
 
@@ -205,18 +205,20 @@ $("#post-chat").on("click", function (event) {
 })
 
 $(document).on("click", ".competitor", function () {
-    competitor = $(this).attr("data-competitor");
-    database.ref("/players/" + $(this).attr("data-competitor")).once("value", function (data) {
-        if (data.val().choice === "" && data.val().competitor === "") {
-            ready = true;
-            // competitor = $(this).attr("data-competitor");
-            database.ref(`players/${competitor}/competitor`).set(username);
-        }
-        else {
-            alert(competitor + " is in a match, try again later");
-            competitor = "";
-        }
-    });
+    if (!ready) {
+        competitor = $(this).attr("data-competitor");
+        database.ref("/players/" + $(this).attr("data-competitor")).once("value", function (data) {
+            if (data.val().choice === "" && data.val().competitor === "") {
+                ready = true;
+                // competitor = $(this).attr("data-competitor");
+                database.ref(`players/${competitor}/competitor`).set(username);
+            }
+            else {
+                alert(competitor + " is in a match, try again later");
+                competitor = "";
+            }
+        });
+    }
 });
 
 $(document).on("click", ".outline", function () {
